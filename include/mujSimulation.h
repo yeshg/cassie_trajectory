@@ -20,7 +20,9 @@ public:
 
     mujSimulation(void);
 
-    bool simulationStep(void);
+    bool visualizeTrajectory(void);
+
+    bool simulationStep(double *trajectory);
 
     void renderWindow();
 
@@ -29,5 +31,11 @@ public:
 private:
 
 };
+
+extern "C"
+{
+    mujSimulation *mujSimulation_new();
+    double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[]);
+}
 
 #endif // MUJSIMULATION_H

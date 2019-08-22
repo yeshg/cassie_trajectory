@@ -11,11 +11,12 @@ LIBS	:= -lmujoco200 -lGL -lglew
 default:
 	$(CC) $(CFLAGS) testSim.cpp src/ik.cpp src/mujSimulation.cpp $(INC) $(LIBS) -o testSim
 	$(CC) -c src/ik.cpp $(CFLAGS) $(INC) $(LIBS) -fPIC -o ik.o
+	$(CC) -c src/mujSimulation.cpp $(CFLAGS) $(INC) $(LIBS) -fPIC -o mujsimulation.o
 
-libcassie_ik:
-	$(CC) -shared -o libcassie_ik.so ik.o $(CFLAGS) $(INC) $(LIBS)
+libmujsimulation:
+	$(CC) -shared -o libmujsimulation.so mujsimulation.o ik.o $(CFLAGS) $(INC) $(LIBS)
 
-all: default libcassie_ik
+all: default libmujsimulation
 
 clean:
-	rm -f testSim libcassie_ik.so ik.o
+	rm -f testSim libcassie_ik.so ik.o libmujsimulation.so mujsimulation.o

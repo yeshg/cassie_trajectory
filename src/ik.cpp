@@ -5,10 +5,13 @@
 
 #include "ik.h"
 
-void cassie_ik(mjModel* m, mjData* d, double lx, double ly, double lz,
+void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
                double rx, double ry, double rz,
                double comx, double comy, double comz)
 {
+    mjModel* m = static_cast<mjModel*> (m_ptr);
+    mjData* d = static_cast<mjData*> (d_ptr);
+
     using namespace Eigen;
 
     d->qpos[0] = comx;
@@ -60,7 +63,7 @@ void cassie_ik(mjModel* m, mjData* d, double lx, double ly, double lz,
     //std::cout << efc_J << std::endl;
     // std::cout << G << std::endl;
 
-    // left foot IK
+    // full body IK
     for (int i = 0; i < 1000; i++)
     {
         // prepare jacobians
@@ -143,6 +146,7 @@ void cassie_ik(mjModel* m, mjData* d, double lx, double ly, double lz,
 
     std::cout << left_x_pos.transpose() << " | " << left_x_des.transpose() << std::endl;
     // std::cin >> a;
+
 }
 
 // void ik(double x, double y, double z)
