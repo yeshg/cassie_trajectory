@@ -35,7 +35,7 @@ private:
 extern "C"
 {
     mujSimulation *mujSimulation_new();
-    double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[]);
+    double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[], int steps, bool render);
 }
 
 #endif // MUJSIMULATION_H

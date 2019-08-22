@@ -144,7 +144,7 @@ void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
 
     //std::cout << "NEFC: " << d->nefc << std::endl << efc_J << std::endl;
 
-    std::cout << left_x_pos.transpose() << " | " << left_x_des.transpose() << std::endl;
+    //std::cout << left_x_pos.transpose() << " | " << left_x_des.transpose() << std::endl;
     // std::cin >> a;
 
 }

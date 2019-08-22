@@ -305,15 +305,18 @@ void mujSimulation::startSimulation()
 extern "C"
 {
     mujSimulation *mujSimulation_new() { return new mujSimulation(); }
-    double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[])
+    double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[], int steps, bool render)
     {
         int phase_len = 28;
         int wait_time = 100;
-        // 100 steps of simulation
-        for(int i = 0; i < 100; i++)
+        // take some steps of simulation
+        for(int i = 0; i < steps; i++)
         {
             sim->simulationStep(traj_pos);
-            sim->renderWindow();
+            if(render == true)
+            {
+                sim->renderWindow();
+            }
         }
         return sim->d->qpos;
     }

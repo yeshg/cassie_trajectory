@@ -13,10 +13,10 @@ default:
 	$(CC) -c src/ik.cpp $(CFLAGS) $(INC) $(LIBS) -fPIC -o ik.o
 	$(CC) -c src/mujSimulation.cpp $(CFLAGS) $(INC) $(LIBS) -fPIC -o mujsimulation.o
 
-libmujsimulation:
-	$(CC) -shared -o libmujsimulation.so mujsimulation.o ik.o $(CFLAGS) $(INC) $(LIBS)
+libcassieik:
+	$(CC) -shared -o libcassieik.so mujsimulation.o ik.o $(CFLAGS) $(INC) $(LIBS)
 
-all: default libmujsimulation
+all: default libcassieik
 
 clean:
-	rm -f testSim libcassie_ik.so ik.o libmujsimulation.so mujsimulation.o
+	rm -f testSim libcassieik.so ik.o mujsimulation.o

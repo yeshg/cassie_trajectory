@@ -24,7 +24,7 @@ int main(int argc, const char** argv){
 
     mujSimulation* sim = mujSimulation_new();
 
-    std::cout << *fetch_cassie_ik(sim, traj_pos) << std::endl; 
+    std::cout << *fetch_cassie_ik(sim, traj_pos, 50, true) << std::endl; 
 
     return 0;
 
