@@ -11,14 +11,14 @@ _libraries['./libcassieik.so'] = ctypes.CDLL(_dir_path + '/libcassieik.so')
 
 # python wrapper for mujSimulation class
 class mujSimulation(object):
-    def __init__(self):
-        _libraries['./libcassieik.so'].mujSimulation_new.argtypes = None
+    def __init__(self, render=True):
+        _libraries['./libcassieik.so'].mujSimulation_new.argtypes = [ctypes.c_bool]
         _libraries['./libcassieik.so'].mujSimulation_new.restype = ctypes.c_void_p
-        _libraries['./libcassieik.so'].fetch_cassie_ik.argtypes = [ctypes.c_void_p, ctypes.c_double*9 , ctypes.c_int, ctypes.c_bool]
+        _libraries['./libcassieik.so'].fetch_cassie_ik.argtypes = [ctypes.c_void_p, ctypes.c_double*9 , ctypes.c_int]
         _libraries['./libcassieik.so'].fetch_cassie_ik.restype = ctypes.POINTER(ctypes.c_double)
-        self.obj = _libraries['./libcassieik.so'].mujSimulation_new()
-    def fetch_cassie_ik(self, traj_pos, steps=30, render=True):
-        return _libraries['./libcassieik.so'].fetch_cassie_ik(self.obj, traj_pos, steps, render)
+        self.obj = _libraries['./libcassieik.so'].mujSimulation_new(render)
+    def fetch_cassie_ik(self, traj_pos, steps=30):
+        return _libraries['./libcassieik.so'].fetch_cassie_ik(self.obj, traj_pos, steps)
 
 
 # # Create mujSimulation object

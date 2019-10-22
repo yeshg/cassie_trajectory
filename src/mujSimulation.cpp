@@ -15,6 +15,9 @@
 #include <mutex>
 #include <chrono>
 
+// BAD PRACTICE CHANGE THIS: using global to keep track of how many times renderWindow() is called
+int renderCount = 0;
+
 // Only using globals because the openGL callbacks do not work with anything
 // but static methods, and I need to modify data relating to the simulation
 // in the callback
@@ -100,7 +103,7 @@ void scroll(GLFWwindow *window, double xoffset, double yoffset)
     mjv_moveCamera(m_glob, mjMOUSE_ZOOM, 0, -0.05 * yoffset, &scn, &cam);
 }
 
-mujSimulation::mujSimulation(void)
+mujSimulation::mujSimulation(bool render_sim)
 {
     // check for mjkey.txt in ~/.mujoco and activate it
     char mjkey_path[4096 + 1024];
@@ -135,38 +138,42 @@ mujSimulation::mujSimulation(void)
         d->qpos[i] = standing_state_qpos[i];
     }
 
-    // initialize OpenGL
-    if (!glfwInit())
-        mju_error("could not initialize GLFW");
-
-    GLFWvidmode vmode = *glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-    window = glfwCreateWindow((2 * vmode.width) / 3, (2 * vmode.height) / 3, "IK", NULL, NULL);
-
-    if (!window)
+    render = render_sim;
+    if(render)
     {
-        glfwTerminate();
-        mju_error("could not create window");
+        // initialize OpenGL
+        if (!glfwInit())
+            mju_error("could not initialize GLFW");
+
+        GLFWvidmode vmode = *glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+        window = glfwCreateWindow((2 * vmode.width) / 3, (2 * vmode.height) / 3, "IK", NULL, NULL);
+
+        if (!window)
+        {
+            glfwTerminate();
+            mju_error("could not create window");
+        }
+
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+
+        // initialize visualization data structures
+        mjv_defaultCamera(&cam);
+        mjv_defaultOption(&opt);
+        mjv_defaultScene(&scn);
+        mjr_defaultContext(&con);
+
+        // create scene and context
+        mjv_makeScene(m, &scn, 2000);
+        mjr_makeContext(m, &con, mjFONTSCALE_150);
+
+        // install GLFW mouse and keyboard callbacks
+        glfwSetKeyCallback(window, keyboard);
+        glfwSetCursorPosCallback(window, mouse_move);
+        glfwSetMouseButtonCallback(window, mouse_button);
+        glfwSetScrollCallback(window, scroll);
     }
-
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-
-    // initialize visualization data structures
-    mjv_defaultCamera(&cam);
-    mjv_defaultOption(&opt);
-    mjv_defaultScene(&scn);
-    mjr_defaultContext(&con);
-
-    // create scene and context
-    mjv_makeScene(m, &scn, 2000);
-    mjr_makeContext(m, &con, mjFONTSCALE_150);
-
-    // install GLFW mouse and keyboard callbacks
-    glfwSetKeyCallback(window, keyboard);
-    glfwSetCursorPosCallback(window, mouse_move);
-    glfwSetMouseButtonCallback(window, mouse_button);
-    glfwSetScrollCallback(window, scroll);
 
     m_glob = m;
     d_glob = d;
@@ -224,10 +231,11 @@ bool mujSimulation::visualizeTrajectory(void)
 
             bool posNotReached = true;
 
+            // Edit: no longer bad hack
             // Note: bad trajectory hack
-            cassie_ik(m, d, trajectory[i][0], -trajectory[i][1], trajectory[i][2],
-                      trajectory[i][3], -trajectory[i][4], trajectory[i][5],
-                      0.02 + 0 * trajectory[i][6], trajectory[i][7], trajectory[i][8]);
+            cassie_ik(m, d, trajectory[i][0], trajectory[i][1], trajectory[i][2],
+                      trajectory[i][3], trajectory[i][4], trajectory[i][5],
+                      0.00 + 1 * trajectory[i][6], trajectory[i][7], trajectory[i][8]);
             // cassie_ik(sin(i*))
 
             mtx.unlock();
@@ -236,29 +244,41 @@ bool mujSimulation::visualizeTrajectory(void)
     }
 }
 
-bool mujSimulation::simulationStep(double *traj_pos){
+bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
 
-    if(glfwWindowShouldClose(window)){
-        // close GLFW, free visualization storage
-        glfwTerminate();
-        mjv_freeScene(&scn);
-        mjr_freeContext(&con);
+    if(render)
+    {
+        if(glfwWindowShouldClose(window)){
+            // close GLFW, free visualization storage
+            glfwTerminate();
+            mjv_freeScene(&scn);
+            mjr_freeContext(&con);
 
-        // free MuJoCo model and data, deactivate
-        mj_deleteData(d);
-        mj_deleteModel(m);
-        mj_deactivate();
-        return false;
+            // free MuJoCo model and data, deactivate
+            mj_deleteData(d);
+            mj_deleteModel(m);
+            mj_deactivate();
+            return false;
+        }
+
+        cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
+                            traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
+                            0.0 + 1 * traj_pos[6], traj_pos[7], traj_pos[8] + 0.02);
+        
+        renderWindow();
     }
-
-    cassie_ik(m, d, traj_pos[0], -traj_pos[1], traj_pos[2],
-                        traj_pos[3], -traj_pos[4], traj_pos[5],
-                        0.02 + 0 * traj_pos[6], traj_pos[7], traj_pos[8]);
-
+    else
+    {
+        cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2],
+                            traj_pos[3], traj_pos[4], traj_pos[5],
+                            0.0 + 1 * traj_pos[6], traj_pos[7], traj_pos[8]);
+    }
 }
 
 void mujSimulation::renderWindow()
 {
+    renderCount++;
+
     mjrRect viewport = {0, 0, 0, 0};
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
@@ -292,7 +312,6 @@ void mujSimulation::startSimulation()
         //mtx.unlock();
 
 
-
         // render while simulation is running
         renderWindow();
     }
@@ -304,19 +323,17 @@ void mujSimulation::startSimulation()
 
 extern "C"
 {
-    mujSimulation *mujSimulation_new() { return new mujSimulation(); }
-    double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[], int steps, bool render)
+    mujSimulation *mujSimulation_new(bool render) { return new mujSimulation(render); }
+    double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[], int steps)
     {
+
         int phase_len = 28;
         int wait_time = 100;
         // take some steps of simulation
+
         for(int i = 0; i < steps; i++)
         {
-            sim->simulationStep(traj_pos);
-            if(render == true)
-            {
-                sim->renderWindow();
-            }
+            sim->simulationStep(traj_pos, wait_time);
         }
         return sim->d->qpos;
     }

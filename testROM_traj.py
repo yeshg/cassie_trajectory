@@ -138,10 +138,15 @@ def get_trajectory_from_ref_foot_pos():
                        x_r, y_r, z_r, 
                        x_com, y_com, z_com])
 
+
+
+filename = "trajectory/traj_from_ref_foot_data.pkl"
 feet_trajectory = get_trajectory_from_ref_foot_pos()
-# feet_trajectory = get_trajectory_from_ref_foot_pos(0.2, 0.0, 825)
+
+#filename = "trajectory/spline_stepping_traj.pkl"
+#feet_trajectory = get_trajectory_from_ref_foot_pos(0.2, 0.0, 825)
 
 #print(feet_trajectory.shape)
 
 cassie = CassieIK(sim_steps=args.sim_steps, render_sim=True)
-cassie.trajectory_ik(feet_trajectory)
+cassie.trajectory_ik(feet_trajectory, filename)
