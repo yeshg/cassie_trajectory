@@ -1,5 +1,5 @@
 #include "mujoco.h"
-#include <eigen3/Eigen/Dense>
+#include "Eigen/Dense"
 #include <iostream>
 #include <math.h>
 

@@ -1,8 +1,9 @@
 MJ_PATH := $(HOME)/.mujoco/mujoco200
+EIGEN_PATH := $(HOME)/.eigen
 
-INC		:= -Iinclude -I$(MJ_PATH)/include -L$(MJ_PATH)/bin $(MJ_PATH)/bin/libglfw.so.3
+INC		:= -Iinclude -I$(MJ_PATH)/include -I$(EIGEN_PATH) -L$(MJ_PATH)/bin $(MJ_PATH)/bin/libglfw.so.3
 
-CFLAGS	:= -Wall -Wextra -O3 -std=c++11 -pthread
+CFLAGS	:= -Wall -Wextra -O3 -std=c++11 -pthread -Wl,-rpath,$(MJ_PATH)/bin
 LDFLAGS	:= -shared -Lsrc
 
 CC 		:= g++
