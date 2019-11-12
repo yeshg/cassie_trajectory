@@ -15,7 +15,7 @@ import pickle
 import os
 
 # user can change step height
-def process_data(filename, speed, step_height):
+def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1):
     data = genfromtxt(filename,delimiter=',')
     # print(data[0,:].shape) # get length of dat
     
@@ -38,16 +38,11 @@ def process_data(filename, speed, step_height):
     # swing_steplen = step_length / left_nans # this is the number of samples we need to fill in the nans
     swing_steplen = left_nans
 
-    # LEFT FOOT: points to interpolate over
-    l_x = [left_initial[0], left_peak[0], left_final[0]]
-    l_y = [left_initial[1], left_peak[1], left_final[1]]
-    l_z = [left_initial[2], left_peak[2], left_final[2]]
+    if useMinJerk:
+        left_spline = use_min_jerk(left_initial, left_peak, left_final, swing_steplen, td_vel)
+    else:
+        left_spline = use_cubic_spline(left_initial, left_peak, left_final, swing_steplen)
 
-    # generate cubic spline (only using left foot for simplicity and to enforce symmetry)
-    l_cs = CubicSpline(l_x, [l_y, l_z], axis=1)
-
-    # indices for cubic spline 
-    l_xs = np.linspace(l_x[0], l_x[2], num=swing_steplen)
 
     # RIGHT FOOT: find range, count of nans
     r_idx_nan = np.where(np.isnan(data[8,:]))[0][0] # first nan value index
@@ -63,14 +58,6 @@ def process_data(filename, speed, step_height):
     # RIGHT FOOT: peak before touch down
     right_peak_1 = [(right_final[0] - right_initial[0]) / 2, right_final[1], step_height]
 
-    ## Cubic Spline Interpolation
-
-    # RIGHT FOOT: points to interpolate over
-    r_x = [right_initial[0], right_peak_1[0], right_final[0]]
-    r_y = [right_initial[1], right_peak_1[1], right_final[1]]
-    r_z = [right_initial[2], right_peak_1[2], right_final[2]]
-
-    left_spline = np.array([l_xs, l_cs(l_xs)[0], l_cs(l_xs)[1]])
     spline_x_shift = step_length / 2
     spline_y_shift = right_final[1] - left_final[1]
     right_spline = np.array([left_spline[0] - spline_x_shift, left_spline[1] + spline_y_shift, left_spline[2]])
@@ -135,6 +122,33 @@ def process_data(filename, speed, step_height):
     # write to output file
     np.save('./rom_processed/rom_traj_data_{}.npy'.format(speed),output)
 
+
+def use_cubic_spline(pos_initial, pos_peak, pos_final, n_points):
+    
+    # LEFT FOOT: points to interpolate over
+    l_x = [pos_initial[0], pos_peak[0], pos_final[0]]
+    l_y = [pos_initial[1], pos_peak[1], pos_final[1]]
+    l_z = [pos_initial[2], pos_peak[2], pos_final[2]]
+
+    # generate cubic spline (only using left foot for simplicity and to enforce symmetry)
+    l_cs = CubicSpline(l_x, [l_y, l_z], axis=1)
+
+    # indices for cubic spline 
+    l_xs = np.linspace(l_x[0], l_x[2], num=n_points)
+
+    left_spline = np.array([l_xs, l_cs(l_xs)[0], l_cs(l_xs)[1]])
+
+    # import ipdb; ipdb.set_trace()
+    return left_spline
+
+def use_min_jerk(init_point, mid_point, final_point, n_points, td_vel):
+    from minJerkFootTrajectories import min_jerk_foot_trajectories
+
+    data = min_jerk_foot_trajectories( init_point, final_point, n_points, mid_point[2], td_vel)
+
+    # import ipdb; ipdb.set_trace()
+    return np.transpose(data[:,1:])
+
 if __name__ == "__main__":
 
 
@@ -150,5 +164,5 @@ if __name__ == "__main__":
 
     for i, speed in enumerate(speeds):
         print("speed = {0}\tstep height = {1:.2f}".format(speed, step_heights[i]))
-        process_data("./walkCycles_2/walkCycle_{}.csv".format(speed), speed, step_heights[i])
+        process_data("./walkCycles_2/walkCycle_{}.csv".format(speed), speed, step_heights[i], useMinJerk = True, td_vel = -0.3)
 
