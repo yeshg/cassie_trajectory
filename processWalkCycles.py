@@ -30,7 +30,8 @@ class CassieIK(object):
     def rom_trajectory_ik_interpolate(self, spline_params, step_size=0.001, speedup = 3):
         
         # calculate length based on step_size
-        points = np.arange(0, 1, step_size * speedup)
+        # points = np.arange(0, 1, step_size * speedup)
+        points = np.linspace(0, 1, 1682 * 2)
         new_points = np.transpose(np.array(splev(points, spline_params)))
         print("New points shape = {}".format(new_points.shape))
         length = points.shape[0]
@@ -66,7 +67,7 @@ class CassieIK(object):
 
 if __name__ == "__main__":
 
-    speeds = [x / 10 for x in range(0, 31)]
+    speeds = [x / 10 for x in range(25, 31)]
     max_step_height = 0.15
     min_step_height = 0.1
     step_heights = [x * ((max_step_height - min_step_height) / 30) + 0.1 for x in range(0, 31)]
@@ -75,6 +76,8 @@ if __name__ == "__main__":
     print(step_heights)
 
     for i, speed in enumerate(speeds):
+        if speed == 1.4 or speed == 1.8 or speed == 1.9 or speed == 2.4 or speed == 2.5 or speed == 2.6 or speed == 3.0:
+            continue
         print("speed = {0}\tstep height = {1:.2f}".format(speed, step_heights[i]))
         rom_trajectory = np.load("./rom_to_taskspace/rom_processed/rom_traj_data_{}.npy".format(speed))
         task_trajectory = rom_trajectory[0:9]
@@ -94,7 +97,6 @@ if __name__ == "__main__":
                         , "qvel": traj_qvel[(traj_qvel.shape[0] // 2):] \
                         , "rfoot": right_foot[(right_foot.shape[0] // 2):] \
                         , "lfoot": left_foot[(left_foot.shape[0] // 2):]}
-        with open("trajectory/aslipTrajs/walkCycle_{}.pkl".format(speed), "wb") as f:
+        with open("trajectory/aslipTrajsTaller/walkCycle_{}.pkl".format(speed), "wb") as f:
             pickle.dump(full_trajectory, f)
             print("wrote pickle file")
-
