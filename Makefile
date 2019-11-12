@@ -10,7 +10,7 @@ CC 		:= g++
 LIBS	:= -lmujoco200 -lGL -lglew 
 
 default:
-	$(CC) $(CFLAGS) testSim.cpp src/ik.cpp src/mujSimulation.cpp $(INC) $(LIBS) -o testSim
+	$(CC) $(CFLAGS) testSim.cpp src/ik.cpp src/mujSimulation.cpp $(INC) $(LIBS) -o testSim.out
 	$(CC) -c src/ik.cpp $(CFLAGS) $(INC) $(LIBS) -fPIC -o ik.o
 	$(CC) -c src/mujSimulation.cpp $(CFLAGS) $(INC) $(LIBS) -fPIC -o mujsimulation.o
 
@@ -20,4 +20,4 @@ libcassieik:
 all: default libcassieik
 
 clean:
-	rm -f testSim libcassieik.so ik.o mujsimulation.o
+	rm -f testSim.out libcassieik.so ik.o mujsimulation.o
