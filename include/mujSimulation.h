@@ -30,6 +30,8 @@ public:
 
     void startSimulation();
 
+    double* runTaskSpaceVel(double *traj_vel);
+
 private:
 
 };
@@ -38,6 +40,7 @@ extern "C"
 {
     mujSimulation *mujSimulation_new(bool render_sim);
     double *fetch_cassie_ik(mujSimulation *sim, double traj_pos[], int steps);
+    double *fetch_cassie_ts_vels(mujSimulation *sim, double task_space_vel[]);
 }
 
 #endif // MUJSIMULATION_H

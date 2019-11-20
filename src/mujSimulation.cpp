@@ -275,6 +275,12 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
     }
 }
 
+double* mujSimulation::runTaskSpaceVel(double *traj_vel){
+    return cassie_task_space_vel( m, d, traj_vel[0], traj_vel[1], traj_vel[2],
+                            traj_vel[3], traj_vel[4], traj_vel[5],
+                            traj_vel[6], traj_vel[7], traj_vel[8]);
+}
+
 void mujSimulation::renderWindow()
 {
     renderCount++;
@@ -336,5 +342,10 @@ extern "C"
             sim->simulationStep(traj_pos, wait_time);
         }
         return sim->d->qpos;
+    }
+
+
+    double *fetch_cassie_ts_vels(mujSimulation *sim, double task_space_vel[]){
+        return sim->runTaskSpaceVel(task_space_vel);
     }
 }
