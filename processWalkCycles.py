@@ -67,7 +67,7 @@ class CassieIK(object):
 
 if __name__ == "__main__":
 
-    speeds = [x / 10 for x in range(25, 31)]
+    speeds = [x / 10 for x in range(0, 21)]
     max_step_height = 0.15
     min_step_height = 0.1
     step_heights = [x * ((max_step_height - min_step_height) / 30) + 0.1 for x in range(0, 31)]
@@ -76,8 +76,8 @@ if __name__ == "__main__":
     print(step_heights)
 
     for i, speed in enumerate(speeds):
-        if speed == 1.4 or speed == 1.8 or speed == 1.9 or speed == 2.4 or speed == 2.5 or speed == 2.6 or speed == 3.0:
-            continue
+        # if speed == 1.4 or speed == 1.8 or speed == 1.9 or speed == 2.4 or speed == 2.5 or speed == 2.6 or speed == 3.0:
+            # continue
         print("speed = {0}\tstep height = {1:.2f}".format(speed, step_heights[i]))
         rom_trajectory = np.load("./rom_to_taskspace/rom_processed/rom_traj_data_{}.npy".format(speed))
         task_trajectory = rom_trajectory[0:9]
@@ -89,8 +89,9 @@ if __name__ == "__main__":
         new_points = splev(u, tck)
 
         task_trajectory_time = rom_trajectory[9:]
-
-        cassie = CassieIK(sim_steps=1, render_sim=False)
+        print('Showing Trajectory')
+        g = input("Enter when ready : ") 
+        cassie = CassieIK(sim_steps=1, render_sim=True)
         traj_qpos, traj_qvel, right_foot, left_foot = cassie.rom_trajectory_ik_interpolate(tck, step_size=0.0001, speedup=3)
 
         full_trajectory = {"qpos": traj_qpos[(traj_qpos.shape[0] // 2):] \

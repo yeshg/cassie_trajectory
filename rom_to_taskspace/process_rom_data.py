@@ -152,9 +152,9 @@ def use_min_jerk(init_point, mid_point, final_point, n_points, td_vel):
 if __name__ == "__main__":
 
 
-    onlyfiles = [f for f in listdir("walkCycles_2") if isfile(join("walkCycles_2", f))]
+    onlyfiles = [f for f in listdir("ImprovedCost") if isfile(join("ImprovedCost", f))]
 
-    speeds = [x / 10 for x in range(0, 31)]
+    speeds = [x / 10 for x in range(0, 21)]
     max_step_height = 0.15
     min_step_height = 0.1
     step_heights = [x * ((max_step_height - min_step_height) / 30) + 0.1 for x in range(0, 31)]
@@ -164,5 +164,5 @@ if __name__ == "__main__":
 
     for i, speed in enumerate(speeds):
         print("speed = {0}\tstep height = {1:.2f}".format(speed, step_heights[i]))
-        process_data("./walkCycles_2/walkCycle_{}.csv".format(speed), speed, step_heights[i], useMinJerk = True, td_vel = -0.3)
+        process_data("./ImprovedCost/walkCycle_{}.csv".format(speed), speed, step_heights[i], useMinJerk = True, td_vel = -0.3)
 
