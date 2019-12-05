@@ -235,7 +235,7 @@ bool mujSimulation::visualizeTrajectory(void)
             // Note: bad trajectory hack
             cassie_ik(m, d, trajectory[i][0], trajectory[i][1], trajectory[i][2],
                       trajectory[i][3], trajectory[i][4], trajectory[i][5],
-                      0.00 + 1 * trajectory[i][6], trajectory[i][7], trajectory[i][8]);
+                      0.00 + 1 * trajectory[i][6], trajectory[i][7], trajectory[i][8], false);
             // cassie_ik(sin(i*))
 
             mtx.unlock();
@@ -261,17 +261,31 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
             return false;
         }
 
-        cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
-                            traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
-                            traj_pos[6], traj_pos[7], traj_pos[8] + 0.02);
+        bool success_lock = cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
+                                traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
+                                traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, true);
+
+        if(success_lock == false){
+
+            bool success_free = cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
+                                            traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
+                                            traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, false);
+        }
         
         renderWindow();
     }
     else
     {
-        cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2],
-                            traj_pos[3], traj_pos[4], traj_pos[5],
-                            0.0 + 1 * traj_pos[6], traj_pos[7], traj_pos[8]);
+        bool success_lock = cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
+                                traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
+                                traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, true);
+
+        if(success_lock == false){
+
+            bool success_free = cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
+                                            traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
+                                            traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, false);
+        }
     }
 }
 

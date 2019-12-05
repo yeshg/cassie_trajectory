@@ -3,7 +3,11 @@
 
 #include "mujoco.h"
 
-void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz, double rx, double ry, double rz, double comx, double comy, double comz);
+bool cassie_ik( void* m_ptr, void* d_ptr, 
+                double lx, double ly, double lz, 
+                double rx, double ry, double rz, 
+                double comx, double comy, double comz,
+                bool zero_hip_yaw);
 
 double* cassie_task_space_vel( void* m_ptr, void* d_ptr, double ldx, double ldy, double ldz,
                double rdx, double rdy, double rdz,

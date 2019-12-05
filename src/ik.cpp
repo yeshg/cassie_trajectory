@@ -10,9 +10,10 @@
 #define __IK_ACCEPTABLE_JOINT_VIOLATION 0.01
 #define __IK_ACCEPTABLE_EQ_CON_VIOLATION 0.001
 
-void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
+bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
                double rx, double ry, double rz,
-               double comx, double comy, double comz)
+               double comx, double comy, double comz,
+               bool zero_hip_yaw)
 {
 
     mjModel* m = static_cast<mjModel*> (m_ptr);
@@ -24,19 +25,24 @@ void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
     d->qpos[1] = comy;
     d->qpos[2] = comz;
 
+    
+
     // cassie mechanical model offset
     double offset_footJoint2midFoot = sqrt(pow((-0.052821 + 0.069746)/2, 2) + pow((0.092622 + 0.010224)/2, 2));
 
     mjtNum left_x[3] = {lx, ly, lz + 0.6 * offset_footJoint2midFoot};
     mjtNum right_x[3] = {rx, ry, rz + 0.6 * offset_footJoint2midFoot};
 
+
     int left_foot_id = mj_name2id(m, mjOBJ_BODY, "left-foot");
     int left_heel_spring_id = mj_name2id(m, mjOBJ_JOINT, "left-heel-spring");
     int left_shin_id = mj_name2id(m, mjOBJ_JOINT, "left-shin");
+    int left_hip_yaw_id = mj_name2id(m, mjOBJ_JOINT, "left-hip-yaw");
 
     int right_foot_id = mj_name2id(m, mjOBJ_BODY, "right-foot");
     int right_heel_spring_id = mj_name2id(m, mjOBJ_JOINT, "right-heel-spring");
-    int right_shin_id = mj_name2id(m, mjOBJ_JOINT, "right-shin");
+    int right_shin_id = mj_name2id(m, mjOBJ_JOINT, "lright-shin");
+    int right_hip_yaw_id = mj_name2id(m, mjOBJ_JOINT, "right-hip-yaw");
 
     // int right_foot_id = mj_name2id(m, mjOBJ_BODY, "right-foot");
     // int pelvis_id = mj_name2id(m, mjOBJ_BODY, "cassie-pelvis");
@@ -142,6 +148,10 @@ void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             G.col(m->jnt_dofadr[left_shin_id]).setZero();
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
+            if(zero_hip_yaw == true){
+                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+            }
 
             MatrixXd Ginv = G.completeOrthogonalDecomposition().pseudoInverse();
             MatrixXd I = MatrixXd::Identity(Ginv.rows(), Ginv.rows());
@@ -163,6 +173,10 @@ void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             G.col(m->jnt_dofadr[left_shin_id]).setZero();
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
+            if(zero_hip_yaw == true){
+                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+            }
 
             //Define joint limit correction step
             // std::cout << "G" << G.size();
@@ -186,6 +200,10 @@ void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             G.col(m->jnt_dofadr[left_shin_id]).setZero();
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
+            if(zero_hip_yaw == true){
+                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+            }
 
             // J_p_left.col(left_heel_spring_id + 2).setZero();
             // J_p_left.col(left_shin_id + 2).setZero();
@@ -198,6 +216,11 @@ void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             // Zero out jacobian columns relating to left and right foot positions because of weird offset angle thing
             J_p_left.col(m->jnt_dofadr[left_foot_id]).setZero();
             J_p_right.col(m->jnt_dofadr[right_foot_id]).setZero();
+
+            if(zero_hip_yaw == true){
+                J_p_right.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                J_p_left.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+            }
 
             // fix the pelvis
             for (int i = 0; i < 6; i++)
@@ -264,6 +287,15 @@ void cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
 
     }
 
+
+    if( constraints_satisfied == true && task_space_error > __IK_TASK_SPACE_TOLERANCE){
+        return true;
+    }else
+    {
+        return false;
+    }
+    
+
     //std::cout << "actual ik foot pos (rx, ry, rz): (" << rx << ", " << ry << ", "  << rz << ")     (lx, ly, lz): (" << lx << ", " << ly << ", "  << lz << ")" << std::endl;
 
     // efc_J:
@@ -301,10 +333,12 @@ double* cassie_task_space_vel( void* m_ptr, void* d_ptr, double ldx, double ldy,
     int left_foot_id = mj_name2id(m, mjOBJ_BODY, "left-foot");
     int left_heel_spring_id = mj_name2id(m, mjOBJ_JOINT, "left-heel-spring");
     int left_shin_id = mj_name2id(m, mjOBJ_JOINT, "left-shin");
+    int left_hip_yaw_id = mj_name2id(m, mjOBJ_JOINT, "left-hip-yaw");
 
     int right_foot_id = mj_name2id(m, mjOBJ_BODY, "right-foot");
     int right_heel_spring_id = mj_name2id(m, mjOBJ_JOINT, "right-heel-spring");
     int right_shin_id = mj_name2id(m, mjOBJ_JOINT, "right-shin");
+    int right_hip_yaw_id = mj_name2id(m, mjOBJ_JOINT, "right-hip-yaw");
 
     // End effector position Jacobian
     Matrix<double, Dynamic, Dynamic, RowMajor> J_p_left(3, m->nv);
