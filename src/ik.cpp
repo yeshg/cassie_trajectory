@@ -10,6 +10,16 @@
 #define __IK_ACCEPTABLE_JOINT_VIOLATION 0.01
 #define __IK_ACCEPTABLE_EQ_CON_VIOLATION 0.001
 
+
+//Debug
+// #define USEDEBUG
+
+#ifdef USEDEBUG
+#define DEBUG_MSG(str) do { std::cout << str << std::endl; } while( false )
+#else
+#define DEBUG_MSG(str) do { } while ( false )
+#endif
+
 bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
                double rx, double ry, double rz,
                double comx, double comy, double comz,
@@ -41,8 +51,18 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
 
     int right_foot_id = mj_name2id(m, mjOBJ_BODY, "right-foot");
     int right_heel_spring_id = mj_name2id(m, mjOBJ_JOINT, "right-heel-spring");
-    int right_shin_id = mj_name2id(m, mjOBJ_JOINT, "lright-shin");
+    int right_shin_id = mj_name2id(m, mjOBJ_JOINT, "right-shin");
     int right_hip_yaw_id = mj_name2id(m, mjOBJ_JOINT, "right-hip-yaw");
+
+    DEBUG_MSG( "Ids for the joints in order: " 
+                << left_foot_id << ", "
+                <<  left_heel_spring_id << ", "
+               << left_shin_id << ", "
+               << left_hip_yaw_id << ", "
+               << right_foot_id  << ", "
+               << right_heel_spring_id  << ", "
+               << right_shin_id  << ", "
+               << right_hip_yaw_id );
 
     // int right_foot_id = mj_name2id(m, mjOBJ_BODY, "right-foot");
     // int pelvis_id = mj_name2id(m, mjOBJ_BODY, "cassie-pelvis");
@@ -83,6 +103,9 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
     bool constraints_satisfied = false;
     double dq_step_norm = 2*__IK_MIN_STEP_SIZE_NORM;
 
+
+    DEBUG_MSG("Entering IK Loop");
+
     // full body IK loop
     for (int iter_count = 0; 
         iter_count < 1000 &&  //Exit after 1000 iterations
@@ -94,6 +117,8 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
         mj_kinematics(m, d);
         mj_comPos(m, d);
         mj_makeConstraint(m, d);
+
+        DEBUG_MSG("mj state updated");
 
         // number of joint limit and equality constraints: total constraints - num friction - contacts
         int njl_eq = d->nefc - (d->nf + d->ncon);
@@ -121,6 +146,10 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             }
         }
 
+
+        DEBUG_MSG("Equality Constraint violation and jacobian calculated, Unacceptable:");
+        DEBUG_MSG(unacceptable_eq_con_violation);
+
         // std::cout << eq_con_violation;
 
         // Joint Limit constraint violation Jacobian and violations
@@ -141,16 +170,20 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             }
         }
 
+        DEBUG_MSG("Joint Limit constraint violation Jacobian and violations calculated, Unacceptable:");
+        DEBUG_MSG(unacceptable_joint_violation);
+
 
         if(unacceptable_joint_violation == true){
 
+            DEBUG_MSG("Entered Joint Violation Correction step");
             G.col(m->jnt_dofadr[left_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[left_shin_id]).setZero();
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
             if(zero_hip_yaw == true){
-                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
-                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+                // G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                // G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
             }
 
             MatrixXd Ginv = G.completeOrthogonalDecomposition().pseudoInverse();
@@ -165,17 +198,21 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             // std::cout << "lim_violation" << lim_violation.size();
             MatrixXd dq = 10 * -N * Jlim.transpose() * (lim_violation);
 
+            
+
             mj_integratePos(m, q_pos.data(), dq.data(), 0.01);
         }
         else if(unacceptable_eq_con_violation == true){
 
+            DEBUG_MSG("Entered Eq Constraint Correction step");
+            
             G.col(m->jnt_dofadr[left_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[left_shin_id]).setZero();
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
             if(zero_hip_yaw == true){
-                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
-                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+                // G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                // G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
             }
 
             //Define joint limit correction step
@@ -187,6 +224,7 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
         }
         else{
 
+            DEBUG_MSG("Entered Task space grad step");
             // get end effector jacobian
             mj_jacBody(m, d, J_p_left.data(), J_r_left.data(), left_foot_id);
             mj_jacBody(m, d, J_p_right.data(), J_r_right.data(), right_foot_id);
@@ -201,8 +239,8 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
             if(zero_hip_yaw == true){
-                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
-                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+                // G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                // G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
             }
 
             // J_p_left.col(left_heel_spring_id + 2).setZero();
@@ -271,10 +309,6 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
 
 
             //mj_normalizeQuat(m, d->qpos);
-
-            // print out quaternion
-            // std::cout << dq.transpose() << std::endl;
-            // std::cout << left_shin_id << " " << left_heel_spring_id << std::endl;
         }
 
 
@@ -283,15 +317,15 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
         // Total linear error of the foot positions
         task_space_error = (right_x_pos - right_x_des).norm() + (right_x_pos - right_x_des).norm();
 
-        std::cout << "iter: " << iter_count << "\tPass Constriant: " << constraints_satisfied << "\tTS err: " << task_space_error << "\t:dq_step_norm: " << dq_step_norm << std::endl;
+        DEBUG_MSG("iter: " << iter_count << "\tPass Constriant: " << constraints_satisfied << "\tTS err: " << task_space_error << "\t:dq_step_norm: " << dq_step_norm);
 
     }
 
 
-    if( constraints_satisfied == true && task_space_error > __IK_TASK_SPACE_TOLERANCE){
+    if( constraints_satisfied == true && task_space_error < __IK_TASK_SPACE_TOLERANCE){
         return true;
-    }else
-    {
+    }
+    else{
         return false;
     }
     

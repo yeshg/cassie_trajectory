@@ -240,7 +240,7 @@ bool mujSimulation::visualizeTrajectory(void)
 
             mtx.unlock();
         }
-        std::cout << "exited loop" << std::endl;
+        // std::cout << "exited loop" << std::endl;
     }
 }
 
@@ -261,6 +261,7 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
             return false;
         }
 
+        // std::cout << "Starting first IK call: "  << std::endl; 
         bool success_lock = cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
                                 traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
                                 traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, true);
@@ -270,7 +271,14 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
             bool success_free = cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
                                             traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
                                             traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, false);
+            // std::cout << "Locked Hip Failed, Freed hip succeed: " << success_free << std::endl; 
         }
+        else
+        {
+            // std::cout << "Locked Hip Succeeded\n";
+        }
+        
+        
         
         renderWindow();
     }
@@ -337,8 +345,6 @@ void mujSimulation::startSimulation()
     }
 
     //simthread.join();
-
-    std::cout << "Exited" << std::endl;
 }
 
 extern "C"
