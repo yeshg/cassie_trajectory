@@ -109,6 +109,7 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
 
     # Stack data together (last element is the time)
 
+    # concatenate the times together
     new_time = np.hstack((data[0,:], data[0,:]))
 
     # print(new_right.shape)
@@ -117,7 +118,7 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     # print(new_time.shape)
 
     output = np.vstack((new_right, new_left, new_com, new_time))
-    output.shape
+    print("output shape: {}".format(output.shape))
 
     # write to output file
     np.save('./rom_processed/rom_traj_data_{}.npy'.format(speed),output)
@@ -155,9 +156,9 @@ if __name__ == "__main__":
     onlyfiles = [f for f in listdir("ImprovedCost") if isfile(join("ImprovedCost", f))]
 
     speeds = [x / 10 for x in range(0, 21)]
-    max_step_height = 0.15
-    min_step_height = 0.1
-    step_heights = [x * ((max_step_height - min_step_height) / 30) + 0.1 for x in range(0, 31)]
+    max_step_height = 0.2
+    min_step_height = 0.2
+    step_heights = [x * ((max_step_height - min_step_height) / 30) + min_step_height for x in range(0, 31)]
 
     print(speeds)
     print(step_heights)
