@@ -68,6 +68,10 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
                << right_shin_id  << ", "
                << right_hip_yaw_id );
 
+    // Make sure that the hip yaw hasn't drifted
+    d->qpos[ m->jnt_qposadr[left_hip_yaw_id] ] = 0;
+    d->qpos[ m->jnt_qposadr[right_hip_yaw_id] ] = 0;
+
     // int right_foot_id = mj_name2id(m, mjOBJ_BODY, "right-foot");
     // int pelvis_id = mj_name2id(m, mjOBJ_BODY, "cassie-pelvis");
 
@@ -347,6 +351,7 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
     }
     else{
         return false;
+        std::cout << "IK Failed\tTask Space Error " << task_space_error << "\tConstraints satisfied " << constraints_satisfied << "constraints_satisfied\n";
     }
     
 
