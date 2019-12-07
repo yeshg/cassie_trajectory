@@ -278,7 +278,7 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
             // std::cout << "Locked Hip Succeeded\n";
         }
         
-        
+        std::this_thread::sleep_for (std::chrono::milliseconds(66));
         
         renderWindow();
     }

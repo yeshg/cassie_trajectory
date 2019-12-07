@@ -10,11 +10,15 @@
 #define __IK_ACCEPTABLE_JOINT_VIOLATION 0.01
 #define __IK_ACCEPTABLE_EQ_CON_VIOLATION 0.001
 
+//
+#define __IK_LOCK_ZERO_BODY_ROTATION 
+
 
 //Debug
-// #define USEDEBUG
+// #define __IK_USEDEBUG
 
-#ifdef USEDEBUG
+
+#ifdef __IK_USEDEBUG
 #define DEBUG_MSG(str) do { std::cout << str << std::endl; } while( false )
 #else
 #define DEBUG_MSG(str) do { } while ( false )
@@ -198,7 +202,12 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             // std::cout << "lim_violation" << lim_violation.size();
             MatrixXd dq = 10 * -N * Jlim.transpose() * (lim_violation);
 
-            
+            // zero out floating base linear or linear and rotational dof
+            #ifdef __IK_LOCK_ZERO_BODY_ROTATION
+            dq.block(0, 0, 6, 1) = MatrixXd::Zero(6, 1);
+            #else
+            dq.block(0, 0, 3, 1) = MatrixXd::Zero(3, 1);
+            #endif
 
             mj_integratePos(m, q_pos.data(), dq.data(), 0.01);
         }
@@ -219,6 +228,13 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             // std::cout << "G" << G.size();
             // std::cout << "lim_violation" << lim_violation.size();
             MatrixXd dq = -10 * G.transpose() * (eq_con_violation);
+
+            // zero out floating base linear or linear and rotational dof
+            #ifdef __IK_LOCK_ZERO_BODY_ROTATION
+            dq.block(0, 0, 6, 1) = MatrixXd::Zero(6, 1);
+            #else
+            dq.block(0, 0, 3, 1) = MatrixXd::Zero(3, 1);
+            #endif
 
             mj_integratePos(m, q_pos.data(), dq.data(), 0.01);
         }
@@ -298,8 +314,12 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             // zero out floating base dof
             // dq.block(0, 0, 7, 1) = MatrixXd::Zero(7, 1);
 
-            // zero out floating base linear dof
+            // zero out floating base linear or linear and rotational dof
+            #ifdef __IK_LOCK_ZERO_BODY_ROTATION
+            dq.block(0, 0, 6, 1) = MatrixXd::Zero(6, 1);
+            #else
             dq.block(0, 0, 3, 1) = MatrixXd::Zero(3, 1);
+            #endif
 
             // velocity might have different dimension than position due to quaternions,
             // so we must integrate it

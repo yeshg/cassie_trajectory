@@ -165,5 +165,5 @@ if __name__ == "__main__":
 
     for i, speed in enumerate(speeds):
         print("speed = {0}\tstep height = {1:.2f}".format(speed, step_heights[i]))
-        process_data("./ImprovedCost/walkCycle_{}.csv".format(speed), speed, step_heights[i], useMinJerk = True, td_vel = -0.3)
+        process_data("./varyHeightSweep/walkCycle_{}.csv".format(speed), speed, step_heights[i], useMinJerk = True, td_vel = -0.3)
 
