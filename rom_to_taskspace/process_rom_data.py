@@ -16,7 +16,7 @@ import os
 
 # user can change step height
 def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1):
-    data = genfromtxt(filename,delimiter=',')
+    data = genfromtxt(filename,delimiter=',',skip_header=1)
     # print(data[0,:].shape) # get length of dat
     
 
@@ -74,7 +74,7 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
 
     # RIGHT FOOT: first from spline, then all from data
     right_data = right_spline # same as left but shifted over half a period
-    right_data = np.hstack((right_data, data[7:, r_idx_after_nan:]) )
+    right_data = np.hstack((right_data, data[7:10, r_idx_after_nan:]) )
 
     ## Store data with added offset
     # COM:
@@ -110,7 +110,7 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     # Stack data together (last element is the time)
 
     # concatenate the times together
-    new_time = np.hstack((data[0,:], data[0,:]))
+    new_time = np.hstack((data[0,:], data[0,-1] + data[0,:]))
 
     # print(new_right.shape)
     # print(new_left.shape)
@@ -121,6 +121,8 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     print("output shape: {}".format(output.shape))
 
     # write to output file
+
+    np.savetxt('./animationROMData/rom_traj_data_{}.csv'.format(speed), output, delimiter=',')
     np.save('./rom_processed/rom_traj_data_{}.npy'.format(speed),output)
 
 
@@ -155,7 +157,7 @@ if __name__ == "__main__":
 
     onlyfiles = [f for f in listdir("ImprovedCost") if isfile(join("ImprovedCost", f))]
 
-    speeds = [x / 10 for x in range(0, 21)]
+    speeds = [x / 10 for x in range(0, 31)]
     max_step_height = 0.2
     min_step_height = 0.2
     step_heights = [x * ((max_step_height - min_step_height) / 30) + min_step_height for x in range(0, 31)]
@@ -165,5 +167,5 @@ if __name__ == "__main__":
 
     for i, speed in enumerate(speeds):
         print("speed = {0}\tstep height = {1:.2f}".format(speed, step_heights[i]))
-        process_data("./varyHeightSweep/walkCycle_{}.csv".format(speed), speed, step_heights[i], useMinJerk = True, td_vel = -0.3)
+        process_data("./ImprovedCost/walkCycle_{}.csv".format(speed), speed, step_heights[i], useMinJerk = True, td_vel = -0.3)
 

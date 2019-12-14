@@ -9,6 +9,9 @@
 #define __IK_MIN_STEP_SIZE_NORM 0.0001
 #define __IK_ACCEPTABLE_JOINT_VIOLATION 0.01
 #define __IK_ACCEPTABLE_EQ_CON_VIOLATION 0.001
+//This is wildly large, but this is currently used for offline processing so it
+//is not an issue. Rarely should the ik run this long
+#define __IK_MAX_ITER 100000 
 
 //
 #define __IK_LOCK_ZERO_BODY_ROTATION 
@@ -113,10 +116,10 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
 
 
     DEBUG_MSG("Entering IK Loop");
-
+    int iter_count;
     // full body IK loop
-    for (int iter_count = 0; 
-        iter_count < 1000 &&  //Exit after 1000 iterations
+    for (iter_count = 0; 
+        iter_count < __IK_MAX_ITER &&  //Exit after __IK_MAX_ITER iterations
         (task_space_error > __IK_TASK_SPACE_TOLERANCE || constraints_satisfied == false) && //Exit when constraints are satisifed and task space error is acceptable
         (dq_step_norm > __IK_MIN_STEP_SIZE_NORM || constraints_satisfied == false); //Exit when the step size is smaller than the minimum step size and constraints are satisfied 
         iter_count++)//10000 before, but simulation takes too long to render with that many steps
@@ -350,8 +353,8 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
         return true;
     }
     else{
+        std::cout << "IK Failed\t Iter: " << iter_count << "\tTask Space Error " << task_space_error << "\tConstraints satisfied " << constraints_satisfied << "\n";
         return false;
-        std::cout << "IK Failed\tTask Space Error " << task_space_error << "\tConstraints satisfied " << constraints_satisfied << "constraints_satisfied\n";
     }
     
 

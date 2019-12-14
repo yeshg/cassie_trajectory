@@ -71,9 +71,9 @@ class CassieIK(object):
             traj_qpos[idx] += self.single_pos_ik(taskspace_points[i])
             idx += 1
 
-        for i_cycles in range(9):
-            for i in i_list:
-                self.single_pos_ik(taskspace_points[i,:] + (i_cycles+1)*(taskspace_points[-1,:] - taskspace_points[0,:]))
+        # for i_cycles in range(9):
+        #     for i in i_list:
+        #         self.single_pos_ik(taskspace_points[i,:] + (i_cycles+1)*(taskspace_points[-1,:] - taskspace_points[0,:]))
 
         
         # fig = plt.figure(figsize=(10,10))
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     frequency = 30
 
-    speeds = [x / 10 for x in range(21, 31)]
+    speeds = [x / 10 for x in range(1, 31)]
     max_step_height = 0.2
     min_step_height = 0.2
     step_heights = [x * ((max_step_height - min_step_height) / 30) + min_step_height for x in range(0, 31)]
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         # plt.show()
 
         print('Showing Trajectory')
-        g = input("Enter when ready : ")
+        # g = input("Enter when ready : ")
         cassie = CassieIK(sim_steps=1, render_sim=True)
         traj_qpos, traj_qvel, right_foot, left_foot, clock_inc = cassie.rom_trajectory_ik_interpolate(tck, time_tck, rom_trajectory[-1][-1], time_new_points[0], speed, frequency=frequency)
 

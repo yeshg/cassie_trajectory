@@ -261,6 +261,7 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
             return false;
         }
 
+
         // std::cout << "Starting first IK call: "  << std::endl; 
         bool success_lock = cassie_ik(m, d, traj_pos[0], traj_pos[1], traj_pos[2] + 0.02,
                                 traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
@@ -272,6 +273,10 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
                                             traj_pos[3], traj_pos[4], traj_pos[5] + 0.02,
                                             traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, false);
             std::cout << "Locked Hip Failed, Freed hip succeed: " << success_free << std::endl; 
+            
+            while(1){
+                renderWindow();
+            }
         }
         else
         {
