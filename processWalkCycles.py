@@ -31,11 +31,15 @@ class CassieIK(object):
     # version of above function for trajectories from aslip rom
     def rom_trajectory_ik_interpolate(self, spline_params, time_spline, end_time, time_new_points, speed, frequency=30): # frequency is the Hz we should sample from
 
+
+        N = int(np.round(end_time*frequency))
+        time_points = np.linspace(0,end_time,N+1)[0:-1]
         # get times for subsampling at specified frequency
-        time_points = np.arange(0, end_time, step=(1/frequency))
+        # time_points = np.arange(0, end_time, step=(1/frequency))
         
         # Total length of 30 Hz trajectory
-        N = time_points.shape[0]
+        # N = time_points.shape[0]
+        
 
         print(N)
         # input()
@@ -112,7 +116,7 @@ if __name__ == "__main__":
 
     frequency = 30
 
-    speeds = [x / 10 for x in range(1, 31)]
+    speeds = [x / 10 for x in range(28, 31)]
     max_step_height = 0.2
     min_step_height = 0.2
     step_heights = [x * ((max_step_height - min_step_height) / 30) + min_step_height for x in range(0, 31)]
