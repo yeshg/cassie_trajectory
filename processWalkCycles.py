@@ -29,7 +29,7 @@ class CassieIK(object):
         return np.array(qpos[:35])
     
     # version of above function for trajectories from aslip rom
-    def rom_trajectory_ik_interpolate(self, spline_params, time_spline, end_time, time_new_points, speed, frequency=30): # frequency is the Hz we should sample from
+    def rom_trajectory_ik_bspline_interpolate(self, spline_params, time_spline, end_time, time_new_points, speed, frequency=30): # frequency is the Hz we should sample from
 
 
         N = int(np.round(end_time*frequency))
@@ -112,6 +112,87 @@ class CassieIK(object):
             
         return traj_qpos, traj_qvel, right_foot, left_foot, (2*np.pi / N)
 
+
+         # version of above function for trajectories from aslip rom
+    def rom_trajectory_ik_lin_interpolate(self, time_trajectory, task_trajectory, speed, frequency=30): # frequency is the Hz we should sample from
+
+        end_time = time_trajectory[-1]
+        N = int(np.round(end_time*frequency))
+        time_points = np.linspace(0,end_time,N+1)[0:-1]
+
+        # print(N)
+        # print(time_points)
+        # input('test')
+        # get times for subsampling at specified frequency
+        # time_points = np.arange(0, end_time, step=(1/frequency))
+        
+        # Total length of 30 Hz trajectory
+        # N = time_points.shape[0]
+        
+
+        print(N)
+        # input()
+
+        # initialize traj_qpos, taskspace_points
+        traj_qpos = np.zeros((N, 35))
+        traj_task_space = np.zeros((N, 9))
+
+
+        from scipy.interpolate import interp1d
+
+        f_interp = interp1d(time_trajectory, task_trajectory, 'linear')
+
+        for idx in range(N):
+            # # get index by finding closest matching time in time_new_points
+            # i = (np.abs(time_new_points - time_points[idx])).argmin()
+
+            traj_task_space[idx] = f_interp( time_points[idx])
+            # print("time: {}  idx: {}  i: {}".format(time_points[idx], idx, i))
+
+
+
+
+        # Step through time at specified frequency and call IK to fill up traj_qpos
+        for idx in range(N):
+            traj_qpos[idx] += self.single_pos_ik(traj_task_space[idx])
+
+        # for i_cycles in range(9):
+        #     for i in i_list:
+        #         self.single_pos_ik(taskspace_points[i,:] + (i_cycles+1)*(taskspace_points[-1,:] - taskspace_points[0,:]))
+
+        
+        # fig = plt.figure(figsize=(10,10))
+        # ax = fig.add_subplot(111)
+        # ax.plot(traj_qpos)
+        # plt.savefig('foo.png')
+        # plot of multiple cycles stiched together
+        fig = plt.figure(figsize=(10,10))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot(traj_task_space[:,0], traj_task_space[:,1], traj_task_space[:,2], 'o-', label='right')
+        ax.plot(traj_task_space[:,3], traj_task_space[:,4], traj_task_space[:,5], 'o-', label='left')
+        ax.plot(traj_task_space[:,6], traj_task_space[:,7], traj_task_space[:,8], 'o-', label='pelvis')
+        ax.set_title('1 cycles of walkCycle at {0} m/s'.format(speed))
+        ax.legend()
+        ax.axis('equal')
+        plt.savefig('downsampledPlots/walkCycle_{}.png'.format(speed))
+
+        # DON"T USE THE QVEL INFO THAT MUCH ITS NOT THAT ACCURATE
+        # Now we gotta estimate the qvels using finite difference estimates of d qpos / dt
+        # only do this for the motor positions
+        motor_indices = [7, 8, 9, 14, 20, 21, 22, 23, 28, 34]
+        traj_qvel = np.zeros((N, len(motor_indices)))
+        for i in range(len(traj_qpos)):
+            traj_qvel[i] += np.take((traj_qpos[i] - traj_qpos[i - 1]) / (1 / frequency), motor_indices)
+
+            
+        # print("COM Z", taskspace_points[:,2])
+        # print("left Z", taskspace_points[:-1])
+        # calculate distance between feet and center of mass, append to trajectory info
+        right_foot = traj_task_space[:,3:6] - traj_task_space[:,6:9]
+        left_foot = traj_task_space[:,0:3] - traj_task_space[:,6:9]
+            
+        return traj_qpos, traj_qvel, right_foot, left_foot, (2*np.pi / N)
+
 if __name__ == "__main__":
 
     frequency = 30
@@ -137,19 +218,18 @@ if __name__ == "__main__":
         rom_trajectory = rom_trajectory[:,0:int( rom_trajectory.shape[1]/2)]
 
         task_trajectory = rom_trajectory[0:9]
+        time_trajectory = rom_trajectory[-1]
 
-        # get relationship between time data and linear baseline for resampling
-        linear_baseline = np.arange(0, rom_trajectory[-1].shape[0])
-        time_trajectory = np.vstack((rom_trajectory[-1], linear_baseline))
+        print(time_trajectory)
 
         # generate splines out of task trajecotry so when we sub-sample to 30 Hz we don't land in between data points
-        from scipy.interpolate import splprep, splev
+        # from scipy.interpolate import splprep, splev
 
-        tck, u = splprep(task_trajectory, s=0)
-        new_points = splev(u, tck)
+        # tck, u = splprep(task_trajectory, s=0)
+        # new_points = splev(u, tck)
 
-        time_tck, time_u = splprep(time_trajectory, s=0)
-        time_new_points = splev(time_u, time_tck)
+        # time_tck, time_u = splprep(time_trajectory, s=0)
+        # time_new_points = splev(time_u, time_tck)
 
         # # plot of time
         # fig = plt.figure(figsize=(10,10))
@@ -162,7 +242,8 @@ if __name__ == "__main__":
         print('Showing Trajectory')
         # g = input("Enter when ready : ")
         cassie = CassieIK(sim_steps=1, render_sim=True)
-        traj_qpos, traj_qvel, right_foot, left_foot, clock_inc = cassie.rom_trajectory_ik_interpolate(tck, time_tck, rom_trajectory[-1][-1], time_new_points[0], speed, frequency=frequency)
+        
+        traj_qpos, traj_qvel, right_foot, left_foot, clock_inc = cassie.rom_trajectory_ik_lin_interpolate(time_trajectory, task_trajectory, speed, frequency=frequency)
 
         clock_incs.append(clock_inc)
 
