@@ -54,18 +54,18 @@ class CassieIK(object):
             # i = (np.abs(time_new_points - time_points[idx])).argmin()
 
             # get index by evaluating time spline at current time and converting to integer index
-            print(splev(time_points[idx], time_spline))
+            # print(splev(time_points[idx], time_spline))
             i = int(splev(time_points[idx], time_spline)[1])
 
             i_list.append(i)
-            print("time: {}  idx: {}  i: {}".format(time_points[idx], idx, i))
+            # print("time: {}  idx: {}  i: {}".format(time_points[idx], idx, i))
 
         # points for splev
         points = np.linspace(0, 1, np.max(i_list)+1)
 
         # use spline to get taskspace trajectory vector for this index, pass through IK
         taskspace_points = np.transpose(np.array(splev(points, spline_params)))
-        print(taskspace_points.shape)
+        # print(taskspace_points.shape)
 
         # print(max(i_list))
 
@@ -104,8 +104,8 @@ class CassieIK(object):
             traj_qvel[i] += np.take((traj_qpos[i] - traj_qpos[i - 1]) / (1 / frequency), motor_indices)
 
             
-        print("COM Z", taskspace_points[:,2])
-        print("left Z", taskspace_points[:-1])
+        # print("COM Z", taskspace_points[:,2])
+        # print("left Z", taskspace_points[:-1])
         # calculate distance between feet and center of mass, append to trajectory info
         right_foot = taskspace_points[:,3:6] - taskspace_points[:,6:9]
         left_foot = taskspace_points[:,0:3] - taskspace_points[:,6:9]
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     frequency = 30
 
-    speeds = [x / 10 for x in range(28, 31)]
+    speeds = [x / 10 for x in range(1, 31)]
     max_step_height = 0.2
     min_step_height = 0.2
     step_heights = [x * ((max_step_height - min_step_height) / 30) + min_step_height for x in range(0, 31)]

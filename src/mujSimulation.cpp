@@ -15,6 +15,8 @@
 #include <mutex>
 #include <chrono>
 
+#define PAUSE_AFTER_IK false
+
 // BAD PRACTICE CHANGE THIS: using global to keep track of how many times renderWindow() is called
 int renderCount = 0;
 
@@ -30,6 +32,8 @@ bool button_middle = false;
 bool button_right = false;
 double lastx = 0;
 double lasty = 0;
+
+bool continue_paused_simulation = false;
 
 mjvCamera cam;  // abstract camera
 mjvOption opt;  // visualization options
@@ -47,6 +51,9 @@ void keyboard(GLFWwindow *window, int key, int scancode, int act, int mods)
     {
         mj_resetData(m_glob, d_glob);
         mj_forward(m_glob, d_glob);
+    }
+    if (act == GLFW_PRESS && key == GLFW_KEY_SPACE){
+        continue_paused_simulation = true;
     }
 }
 
@@ -274,18 +281,24 @@ bool mujSimulation::simulationStep(double *traj_pos, int wait_time){
                                             traj_pos[6], traj_pos[7], traj_pos[8] + 0.02, false);
             std::cout << "Locked Hip Failed, Freed hip succeed: " << success_free << std::endl; 
             
-            while(1){
-                renderWindow();
-            }
+            // while(1){
+            //     renderWindow();
+            // }
         }
         else
         {
             // std::cout << "Locked Hip Succeeded\n";
         }
+
+        renderWindow();
+        continue_paused_simulation = false;
         
+        while(continue_paused_simulation == false && PAUSE_AFTER_IK == true){
+            renderWindow();
+        }
         std::this_thread::sleep_for (std::chrono::milliseconds(66));
         
-        renderWindow();
+        
     }
     else
     {
@@ -368,7 +381,6 @@ extern "C"
         }
         return sim->d->qpos;
     }
-
 
     double *fetch_cassie_ts_vels(mujSimulation *sim, double task_space_vel[]){
         return sim->runTaskSpaceVel(task_space_vel);

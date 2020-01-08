@@ -193,8 +193,8 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
             if(zero_hip_yaw == true){
-                // G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
-                // G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
             }
 
             MatrixXd Ginv = G.completeOrthogonalDecomposition().pseudoInverse();
@@ -216,6 +216,11 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             dq.block(0, 0, 3, 1) = MatrixXd::Zero(3, 1);
             #endif
 
+            if(zero_hip_yaw == true){
+                dq.row(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                dq.row(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+            }
+
             mj_integratePos(m, q_pos.data(), dq.data(), 0.01);
         }
         else if(unacceptable_eq_con_violation == true){
@@ -227,8 +232,8 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
             if(zero_hip_yaw == true){
-                // G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
-                // G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
             }
 
             //Define joint limit correction step
@@ -242,6 +247,11 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             #else
             dq.block(0, 0, 3, 1) = MatrixXd::Zero(3, 1);
             #endif
+
+            if(zero_hip_yaw == true){
+                dq.row(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                dq.row(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+            }
 
             mj_integratePos(m, q_pos.data(), dq.data(), 0.01);
         }
@@ -262,8 +272,8 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             G.col(m->jnt_dofadr[right_heel_spring_id]).setZero();
             G.col(m->jnt_dofadr[right_shin_id]).setZero();
             if(zero_hip_yaw == true){
-                // G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
-                // G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                G.col(m->jnt_dofadr[left_hip_yaw_id]).setZero();
             }
 
             // J_p_left.col(left_heel_spring_id + 2).setZero();
@@ -328,6 +338,11 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
             dq.block(0, 0, 3, 1) = MatrixXd::Zero(3, 1);
             #endif
 
+            if(zero_hip_yaw == true){
+                dq.row(m->jnt_dofadr[right_hip_yaw_id]).setZero();
+                dq.row(m->jnt_dofadr[left_hip_yaw_id]).setZero();
+            }
+
             // velocity might have different dimension than position due to quaternions,
             // so we must integrate it
             mj_integratePos(m, q_pos.data(), dq.data(), 0.2);
@@ -348,6 +363,7 @@ bool cassie_ik(void* m_ptr, void* d_ptr, double lx, double ly, double lz,
 
     }
 
+    DEBUG_MSG("Hip Yaw Joints at Completion. Right: " << d->qpos[ m->jnt_qposadr[right_hip_yaw_id] ] << "    Left: " << d->qpos[ m->jnt_qposadr[left_hip_yaw_id] ]);
 
     if( constraints_satisfied == true && task_space_error < __IK_TASK_SPACE_TOLERANCE){
         return true;
