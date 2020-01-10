@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
     onlyfiles = [f for f in listdir("ImprovedCost") if isfile(join("ImprovedCost", f))]
 
-    speeds = [x / 10 for x in range(0, 31)]
+    speeds = [x / 10 for x in range(0, 21)]
     max_step_height = 0.2
     min_step_height = 0.2
     step_heights = [x * ((max_step_height - min_step_height) / 30) + min_step_height for x in range(0, 31)]
