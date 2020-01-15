@@ -16,6 +16,7 @@ import os
 
 # user can change step height
 def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1):
+    print("File name: " + filename)
     data = genfromtxt(filename,delimiter=',',skip_header=1)
     # print(data[0,:].shape) # get length of dat
     
@@ -34,14 +35,19 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
 
     ## Cubic Spline Interpolation
 
+    
     step_length = data[4,-1] - data[4,0]
     # swing_steplen = step_length / left_nans # this is the number of samples we need to fill in the nans
     swing_steplen = left_nans
+    swing_duration = data[0, l_idx_after_nan-1] - data[0, l_idx_nan]
 
     if useMinJerk:
-        left_spline = use_min_jerk(left_initial, left_peak, left_final, swing_steplen, td_vel)
+        left_spline_full = use_min_jerk(left_initial, left_peak, left_final, swing_steplen, td_vel)
+        left_spline = left_spline_full[0:3]
+        left_spline_vel = left_spline_full[3:6]/(swing_duration)
     else:
         left_spline = use_cubic_spline(left_initial, left_peak, left_final, swing_steplen)
+        
 
 
     # RIGHT FOOT: find range, count of nans
@@ -61,20 +67,30 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     spline_x_shift = step_length / 2
     spline_y_shift = right_final[1] - left_final[1]
     right_spline = np.array([left_spline[0] - spline_x_shift, left_spline[1] + spline_y_shift, left_spline[2]])
-
+    right_spline_vel = left_spline_vel
     ## Store data together
 
     # COM: store straight from original data
     com_data = np.array([data[1], data[2], data[3]])
+
+    com_data_vel = np.array([data[10], data[11], data[12]])
+
 
     # LEFT FOOT: first from data, then from spline, then from data again
     left_data = data[4:7, 0:l_idx_nan]
     left_data = np.hstack((left_data, left_spline) )
     left_data = np.hstack((left_data, data[4:7, l_idx_after_nan:]))
 
+    left_data_vel = 0*data[4:7, 0:l_idx_nan]
+    left_data_vel = np.hstack((left_data_vel, left_spline_vel) )
+    left_data_vel = np.hstack((left_data_vel, 0*data[4:7, l_idx_after_nan:]))
+
     # RIGHT FOOT: first from spline, then all from data
     right_data = right_spline # same as left but shifted over half a period
     right_data = np.hstack((right_data, data[7:10, r_idx_after_nan:]) )
+
+    right_data_vel = right_spline_vel
+    right_data_vel = np.hstack((right_data_vel, 0*data[7:10, r_idx_after_nan:]))
 
     ## Store data with added offset
     # COM:
@@ -83,11 +99,15 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     new_com_z = np.hstack((com_data[2], com_data[2]))
     new_com = np.vstack((new_com_x, new_com_y, new_com_z))
 
+    new_com_vel = np.hstack((com_data_vel, com_data_vel))
+
     # LEFT FOOT:
     new_left_x = np.hstack((left_data[0], left_data[0] + step_length))
     new_left_y = np.hstack((left_data[1], left_data[1]))
     new_left_z = np.hstack((left_data[2], left_data[2]))
     new_left = np.vstack((new_left_x, new_left_y, new_left_z))
+
+    new_left_vel = np.hstack((left_data_vel, left_data_vel))
 
     # RIGHT FOOT:
     new_right_x = np.hstack((right_data[0], right_data[0] + step_length))
@@ -95,9 +115,15 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     new_right_z = np.hstack((right_data[2], right_data[2]))
     new_right = np.vstack((new_right_x, new_right_y, new_right_z))
 
+    new_right_vel = np.hstack((right_data_vel, right_data_vel))
+
+
+    # concatenate the times together
+    new_time = np.hstack((data[0,:], data[0,-1] + data[0,:]))
+
     # plot of multiple cycles stiched together
-    fig = plt.figure(figsize=(10,10))
-    ax = fig.add_subplot(111, projection='3d')
+    fig = plt.figure(figsize=(10,20))
+    ax = fig.add_subplot(311, projection='3d')
 
     ax.plot(new_com[0], new_com[1], new_com[2], label='pelvis')
     ax.plot(new_left[0], new_left[1], new_left[2], label='left')
@@ -105,19 +131,40 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     ax.set_title('2 cycles of walkCycle at {0} m/s, step_height = {1:.2f}'.format(speed,step_height))
     ax.legend()
     ax.axis('equal')
+
+    ax2 = fig.add_subplot(312)
+    ax2.plot(new_time, new_com[0])
+    ax2.plot(new_time, new_com[1])
+    ax2.plot(new_time, new_com[2])
+    ax2.plot(new_time, new_right[0])
+    ax2.plot(new_time, new_right[1])
+    ax2.plot(new_time, new_right[2])
+    ax2.plot(new_time, new_left[0])
+    ax2.plot(new_time, new_left[1])
+    ax2.plot(new_time, new_left[2])
+
+    ax2 = fig.add_subplot(313)
+    ax2.plot(new_time, new_com_vel[0])
+    ax2.plot(new_time, new_com_vel[1])
+    ax2.plot(new_time, new_com_vel[2])
+    ax2.plot(new_time, new_right_vel[0])
+    ax2.plot(new_time, new_right_vel[1])
+    ax2.plot(new_time, new_right_vel[2])
+    ax2.plot(new_time, new_left_vel[0])
+    ax2.plot(new_time, new_left_vel[1])
+    ax2.plot(new_time, new_left_vel[2])
+
     plt.savefig('plots/walkCycle_{}.png'.format(speed))
 
     # Stack data together (last element is the time)
 
-    # concatenate the times together
-    new_time = np.hstack((data[0,:], data[0,-1] + data[0,:]))
 
     # print(new_right.shape)
     # print(new_left.shape)
     # print(new_com.shape)
     # print(new_time.shape)
 
-    output = np.vstack((new_right, new_left, new_com, new_time))
+    output = np.vstack((new_time, new_com, new_com_vel, new_right, new_right_vel, new_left, new_left_vel))
     print("output shape: {}".format(output.shape))
 
     # write to output file
@@ -135,6 +182,9 @@ def use_cubic_spline(pos_initial, pos_peak, pos_final, n_points):
 
     # generate cubic spline (only using left foot for simplicity and to enforce symmetry)
     l_cs = CubicSpline(l_x, [l_y, l_z], axis=1)
+
+    #get cubic spline derivative, if needed finish implementing this
+    dl_cs = l_cs.derivative()
 
     # indices for cubic spline 
     l_xs = np.linspace(l_x[0], l_x[2], num=n_points)

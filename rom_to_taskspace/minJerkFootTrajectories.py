@@ -26,11 +26,19 @@ def min_jerk_foot_trajectories( initPos, finalPos, nPoints, h, zdotTD):
         -(5*xF)/(2*(T**4)) * (t**4) \
         +xF/(T**5) * (t**5)
 
+    dx = (5*xF)/(2*(T**2)) * 2 * (t) \
+        -(5*xF)/(2*(T**4)) * 4 * (t**3) \
+        +xF/(T**5) * 5* (t**4)
+
     yF = finalPos[1] - initPos[1]
     y = initPos[1]  \
         +(5*yF)/(2*(T**2)) * (t**2)  \
         -(5*yF)/(2*(T**4)) * (t**4)  \
         +yF/(T**5) * (t**5)
+
+    dy = (5*yF)/(2*(T**2)) * 2 *(t)  \
+        -(5*yF)/(2*(T**4)) * 4 *(t**3)  \
+        +yF/(T**5) * 5 * (t**4)
 
     zF = finalPos[2] - initPos[2]
     hrel = h
@@ -40,6 +48,10 @@ def min_jerk_foot_trajectories( initPos, finalPos, nPoints, h, zdotTD):
          -(40*hrel + 20*zF - 3*T*zdotTD)/T**4 * (t1**4)  \
          +(4*(24*hrel + 20*zF - 3*T*zdotTD))/(3*T**5) * (t1**5)
 
+    dz1 = (40*hrel + (20*zF)/3 - T*zdotTD)/(4*T**2) *2* (t1)  \
+         -(40*hrel + 20*zF - 3*T*zdotTD)/T**4 *4* (t1**3)  \
+         +(4*(24*hrel + 20*zF - 3*T*zdotTD))/(3*T**5) *5* (t1**4)
+
     z2 = initPos[2] + 2*hrel - (28*zF)/3 + (7*T*zdotTD)/4  \
         -(120*hrel - 460*zF + 87*T*zdotTD)/(6*T) * (t2)  \
         +(1080*hrel - 2860*zF + 549*T*zdotTD)/(12*T**2) * (t2**2) \
@@ -47,15 +59,34 @@ def min_jerk_foot_trajectories( initPos, finalPos, nPoints, h, zdotTD):
         +(360*hrel - 700*zF + 141*T*zdotTD)/(3*T**4) * (t2**4)  \
         -(4*(24*hrel - 44*zF + 9*T*zdotTD))/(3*T**5) * (t2**5)
 
-    print(t.shape)
-    print(t1.shape)
-    print(t2.shape)
-    print(x.shape)
-    print(y.shape)
-    print(z1.shape)
-    print(z2.shape)
+    dz2 = -(120*hrel - 460*zF + 87*T*zdotTD)/(6*T)  \
+        +(1080*hrel - 2860*zF + 549*T*zdotTD)/(12*T**2) *2* (t2) \
+        -(480*hrel - 1040*zF + 204*T*zdotTD)/(3*T**3) *3* (t2**2) \
+        +(360*hrel - 700*zF + 141*T*zdotTD)/(3*T**4) *4* (t2**3)  \
+        -(4*(24*hrel - 44*zF + 9*T*zdotTD))/(3*T**5) *5* (t2**4)
 
-    out = np.transpose([t, x, y, np.concatenate((z1,z2)) ])
+    # print(t.shape)
+    # print(t1.shape)
+    # print(t2.shape)
+    # print(x.shape)
+    # print(y.shape)
+    # print(z1.shape)
+    # print(z2.shape)
+
+    # import matplotlib.pyplot as plt
+
+    # plt.subplot(2, 1, 1)
+    # plt.plot(t,x)
+    # plt.plot(t,y)
+    # plt.plot(t,np.concatenate((z1,z2)))
+    # plt.subplot(2, 1, 2)
+    # plt.plot(t,dx)
+    # plt.plot(t,dy)
+    # plt.plot(t,np.concatenate((dz1,dz2)))
+    # plt.show()
+    # input()
+
+    out = np.transpose([t, x, y, np.concatenate((z1,z2)), dx, dy, np.concatenate((dz1,dz2))])
 
     return out
 
