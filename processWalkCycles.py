@@ -197,7 +197,7 @@ if __name__ == "__main__":
 
     frequency = 30
 
-    speeds = [x / 10 for x in range(1, 31)]
+    speeds = [x / 10 for x in range(1, 21)]
     max_step_height = 0.2
     min_step_height = 0.2
     step_heights = [x * ((max_step_height - min_step_height) / 30) + min_step_height for x in range(0, 31)]
@@ -217,8 +217,8 @@ if __name__ == "__main__":
         # # get first half of rom_trajectory (one cycle and not two)
         rom_trajectory = rom_trajectory[:,0:int( rom_trajectory.shape[1]/2)]
 
-        task_trajectory = rom_trajectory[1:10]
-        task_vel_trajectory = rom_trajectory[10:19]
+        task_trajectory = rom_trajectory[1:10] # right, left, com
+        task_vel_trajectory = rom_trajectory[10:19] # right, left, com
         time_trajectory = rom_trajectory[0]
 
         print(time_trajectory)
