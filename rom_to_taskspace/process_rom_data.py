@@ -164,7 +164,8 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     # print(new_com.shape)
     # print(new_time.shape)
 
-    output = np.vstack((new_time, new_com, new_com_vel, new_right, new_right_vel, new_left, new_left_vel))
+    # output = np.vstack((new_time, new_com, new_com_vel, new_right, new_right_vel, new_left, new_left_vel))
+    output = np.vstack((new_time, new_right, new_left, new_com, new_right_vel, new_left_vel, new_com_vel))
     print("output shape: {}".format(output.shape))
 
     # write to output file

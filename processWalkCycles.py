@@ -217,8 +217,9 @@ if __name__ == "__main__":
         # # get first half of rom_trajectory (one cycle and not two)
         rom_trajectory = rom_trajectory[:,0:int( rom_trajectory.shape[1]/2)]
 
-        task_trajectory = rom_trajectory[0:9]
-        time_trajectory = rom_trajectory[-1]
+        task_trajectory = rom_trajectory[1:10]
+        task_vel_trajectory = rom_trajectory[10:19]
+        time_trajectory = rom_trajectory[0]
 
         print(time_trajectory)
 
