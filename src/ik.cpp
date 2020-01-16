@@ -1,5 +1,6 @@
 #include "mujoco.h"
-#include "Eigen/Dense"
+//#include "Eigen/Dense" // for Kevin
+#include <eigen3/Eigen/Dense> // for Yesh
 #include <iostream>
 #include <math.h>
 
