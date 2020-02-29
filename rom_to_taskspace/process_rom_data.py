@@ -130,7 +130,20 @@ def process_data(filename, speed, step_height, useMinJerk = True, td_vel = -0.1)
     ax.plot(new_right[0], new_right[1], new_right[2], label='right')
     ax.set_title('2 cycles of walkCycle at {0} m/s, step_height = {1:.2f}'.format(speed,step_height))
     ax.legend()
-    ax.axis('equal')
+
+    # get X Y Z from all points
+    X = np.concatenate([new_com[0], new_left[0], new_right[0]])
+    Y = np.concatenate([new_com[1], new_left[1], new_right[1]])
+    Z = np.concatenate([new_com[2], new_left[2], new_right[2]])
+
+    # Create cubic bounding box to simulate equal aspect ratio
+    max_range = np.array([X.max()-X.min(), Y.max()-Y.min(), Z.max()-Z.min()]).max()
+    Xb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][0].flatten() + 0.5*(X.max()+X.min())
+    Yb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][1].flatten() + 0.5*(Y.max()+Y.min())
+    Zb = 0.5*max_range*np.mgrid[-1:2:2,-1:2:2,-1:2:2][2].flatten() + 0.5*(Z.max()+Z.min())
+    # Comment or uncomment following both lines to test the fake bounding box:
+    for xb, yb, zb in zip(Xb, Yb, Zb):
+        ax.plot([xb], [yb], [zb], 'w')
 
     ax2 = fig.add_subplot(312)
     ax2.plot(new_time, new_com[0])

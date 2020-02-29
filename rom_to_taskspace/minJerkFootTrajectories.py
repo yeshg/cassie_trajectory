@@ -56,18 +56,18 @@ def min_jerk_foot_trajectories( initPos, finalPos, nPoints, h, zdotTD):
     # print(z1.shape)
     # print(z2.shape)
 
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
 
-    plt.subplot(2, 1, 1)
-    plt.plot(t,x)
-    plt.plot(t,y)
-    plt.plot(t,np.concatenate((z1,z2)))
-    plt.subplot(2, 1, 2)
-    plt.plot(t,dx)
-    plt.plot(t,dy)
-    plt.plot(t,np.concatenate((dz1,dz2)))
-    plt.show()
-    input()
+    # plt.subplot(2, 1, 1)
+    # plt.plot(t,x)
+    # plt.plot(t,y)
+    # plt.plot(t,np.concatenate((z1,z2)))
+    # plt.subplot(2, 1, 2)
+    # plt.plot(t,dx)
+    # plt.plot(t,dy)
+    # plt.plot(t,np.concatenate((dz1,dz2)))
+    # plt.show()
+    # input()
 
     out = np.transpose([t, x, y, np.concatenate((z1,z2)), dx, dy, np.concatenate((dz1,dz2))])
 
