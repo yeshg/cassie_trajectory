@@ -84,7 +84,7 @@ class CassieIK(object):
         ax.plot(traj_task_space[:,6], traj_task_space[:,7], traj_task_space[:,8], 'o-', label='pelvis')
         ax.set_title('1 cycles of walkCycle at {0} m/s'.format(speed))
         ax.legend()
-        ax.axis('equal')
+        # ax.axis('equal')
 
         ax2 = fig.add_subplot(412)
         ax2.plot(time_points, traj_task_space[:,6])
@@ -133,7 +133,8 @@ class CassieIK(object):
 
 if __name__ == "__main__":
 
-    frequency = 30
+    # frequency = 30
+    frequency = 40
 
     speeds = [x / 10 for x in range(0, 21)]
     max_step_height = 0.2

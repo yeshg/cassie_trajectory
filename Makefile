@@ -1,5 +1,5 @@
-MJ_PATH := $(HOME)/.mujoco/mujoco200
-EIGEN_PATH := $(HOME)/.eigen
+MJ_PATH := $(HOME)/.mujoco/mujoco200_linux
+EIGEN_PATH := $(HOME)/Eigen
 
 INC		:= -Iinclude -I$(MJ_PATH)/include -I$(EIGEN_PATH) -L$(MJ_PATH)/bin $(MJ_PATH)/bin/libglfw.so.3
 
